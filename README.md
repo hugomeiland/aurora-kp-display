@@ -7,3 +7,4 @@ my clock on the wall or the thermometer at the window.
 
 The first version of this is build on the LILYGO T-Display.
   
+[IMG_0983.jpg]
