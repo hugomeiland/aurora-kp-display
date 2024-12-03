@@ -5,6 +5,6 @@ of the Space Weather Prediction Center (SWPC). Since life will get in the way of
 app, I wanted to create something that is really accessible can can be read in a glance. Something like
 my clock on the wall or the thermometer at the window.
 
-The first version of this is build on the LILYGO T-Display.
+The first version of this is build on the LILYGO TTGO T-Display.
   
 ![Aurora Kp display](IMG_0983.jpg)
