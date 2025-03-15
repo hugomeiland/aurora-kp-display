@@ -1,7 +1,7 @@
 {
   "Configurations": [
     {
-      "Board": "ESP32S3 Dev Module",
+      "Board": "ESP32S3_DEV",
       "Version": "0.1",
       "URL": "https://github.com/hugomeiland/aurora-kp-display/releases/download/v0.1/auroraalert.v0.1.bin"
     }
