@@ -1,0 +1,8 @@
+{
+  "Configurations": [
+    {
+      "Version": "0.1",
+      "URL": "https://example.com/myimages/example.esp32_dev.v2.bin"
+    }
+  ]
+}
