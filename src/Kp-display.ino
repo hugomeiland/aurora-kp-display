@@ -49,7 +49,7 @@ const unsigned long period = 3 * 60 * 1000;  //the value is a number of millisec
 
 // https://github.com/JimSHED/ESP32-OTA-Pull-GitHub
 #define RELEASE_URL "https://raw.githubusercontent.com/hugomeiland/aurora-kp-display/refs/heads/main/release.json"
-#define VERSION    "0.0" // The current version of this program
+#define VERSION    "0.2" // The current version of this program
 
 WiFiManager wm;
 
