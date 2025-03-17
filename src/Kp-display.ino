@@ -6,9 +6,10 @@
 #include <HTTPClient.h>
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include "ESP32OTAPull.h"
+#include <NTPClient.h>
+#include <WiFiUdp.h>
 
 
-#define GFX_BL 38
 
 Arduino_ESP32RGBPanel *bus = new Arduino_ESP32RGBPanel(
   39 /* CS */, 48 /* SCK */, 47 /* SDA */,
@@ -23,8 +24,9 @@ Arduino_ST7701_RGBPanel *gfx = new Arduino_ST7701_RGBPanel(
   st7701_type1_init_operations, sizeof(st7701_type1_init_operations),     true /* BGR */,
   10 /* hsync_front_porch */, 8 /* hsync_pulse_width */, 50 /* hsync_back_porch */,
   10 /* vsync_front_porch */, 8 /* vsync_pulse_width */, 20 /* vsync_back_porch */);
+#define GFX_BL 38
 
-//#include "touch.h"
+#include "touch.h"
 
 static uint32_t screenWidth;
 static uint32_t screenHeight;
@@ -38,28 +40,42 @@ static const lv_font_t * font_normal;
 static lv_coord_t tab_h;
 
 static lv_obj_t * tv;
-static lv_obj_t * label;
+static lv_obj_t * Kp_label;
+static lv_obj_t * Index_label;
 
 float Kp_val = 9.9;
 int Index = 999;
+char buf[64];
 
-unsigned long startMillis;  //some global variables available anywhere in the program
+
+unsigned long startMillis;
 unsigned long currentMillis;
 const unsigned long period = 3 * 60 * 1000;  //the value is a number of milliseconds
 
 // https://github.com/JimSHED/ESP32-OTA-Pull-GitHub
 #define RELEASE_URL "https://raw.githubusercontent.com/hugomeiland/aurora-kp-display/refs/heads/main/release.json"
-#define VERSION    "0.2" // The current version of this program
+#define VERSION    "0.3" // The current version of this program
+ESP32OTAPull ota;
 
+// https://github.com/tzapu/WiFiManager
 WiFiManager wm;
 
+// https://github.com/arduino-libraries/NTPClient
+WiFiUDP ntpUDP;
+// You can specify the time server pool and the offset, (in seconds)
+// additionally you can specify the update interval (in milliseconds).
+NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 3600, 600000);
+
+WiFiClientSecure* client = new WiFiClientSecure;
+
+
 void getKp() {
-  WiFiClientSecure* client = new WiFiClientSecure;
+  //WiFiClientSecure* client = new WiFiClientSecure;
   if (client) {
     client->setInsecure();
     HTTPClient https;
     Serial.print("[HTTPS] begin...\n");
-    if (https.begin(*client, "https://services.swpc.noaa.gov/text/3-day-forecast.txt")) {  // HTTPS
+    if (https.begin(*client, "https://services.swpc.noaa.gov/text/3-day-forecast.txt")) {
       Serial.print("[HTTPS] GET...\n");
       int httpCode = https.GET();
       if (httpCode > 0) {
@@ -74,7 +90,7 @@ void getKp() {
             lineEnd = payload.indexOf("\n", payloadIndex);
             String line = payload.substring(lineStart, lineEnd);
             if (line.startsWith("The greatest expected 3 hr Kp for")) {
-              Serial.println(line);
+              //Serial.println(line);
               int kpStart = line.indexOf(" is ");
               int kpEnd = line.indexOf(" (");
               String KpString = line.substring(kpStart + 4, kpEnd);
@@ -92,16 +108,17 @@ void getKp() {
       https.end();
     }
   } else { Serial.printf("[HTTPS] Unable to connect\n"); }
-  client->stop();
+  //client->stop();
 }
 
+
 void getIndex() {
-  WiFiClientSecure* client = new WiFiClientSecure;
+  //WiFiClientSecure* client = new WiFiClientSecure;
   if (client) {
     client->setInsecure();
     HTTPClient https;
     Serial.print("[HTTPS] begin...\n");
-    if (https.begin(*client, "https://services.swpc.noaa.gov/text/aurora-nowcast-hemi-power.txt")) {  // HTTPS
+    if (https.begin(*client, "https://services.swpc.noaa.gov/text/aurora-nowcast-hemi-power.txt")) {
       Serial.print("[HTTPS] GET...\n");
       int httpCode = https.GET();
       if (httpCode > 0) {
@@ -110,8 +127,8 @@ void getIndex() {
           String payload = https.getString();
           String SouthIndexString = payload.substring(payload.length() - 4, payload.length() - 1);
           String NorthIndexString = payload.substring(payload.length() - 12, payload.length() - 9);
-          Serial.println(NorthIndexString);
-          Serial.println(SouthIndexString);
+          //Serial.println(NorthIndexString);
+          //Serial.println(SouthIndexString);
           Index = NorthIndexString.toInt();
           Serial.println(Index);
         }
@@ -123,7 +140,7 @@ void getIndex() {
   } else {
     Serial.printf("[HTTPS] Unable to connect\n");
   }
-  client->stop();
+  //client->stop();
 }
 
 
@@ -139,36 +156,33 @@ void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color
   lv_disp_flush_ready(disp);
 }
 
-/*void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
-{
-  if (touch_has_signal())
-  {
-    if (touch_touched())
-    {
-      data->state = LV_INDEV_STATE_PR;
 
-      /*Set the coordinates*//*
+void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
+{
+  if (touch_has_signal()) {
+    if (touch_touched()) {
+      data->state = LV_INDEV_STATE_PR;
+      /*Set the coordinates*/
       data->point.x = touch_last_x;
       data->point.y = touch_last_y;
-    }
-    else if (touch_released())
-    {
+    } else if (touch_released()) {
       data->state = LV_INDEV_STATE_REL;
     }
-  }
-  else
-  {
+  } else {
     data->state = LV_INDEV_STATE_REL;
   }
-}*/
+}
+
 
 void setup()
 {
   Serial.begin(115200);
   delay(3000);
   Serial.println("AuroraAlert");
+  Serial.printf("Running version %s of the sketch, Board='%s', Device='%s'.\n", VERSION, ARDUINO_BOARD, WiFi.macAddress().c_str());
+
   //touch_init();
-  gfx->begin(16000000); /* specify data bus speed */
+  gfx->begin(16000000);
   gfx->fillScreen(BLACK);
 #ifdef GFX_BL
   pinMode(GFX_BL, OUTPUT);
@@ -199,66 +213,92 @@ void setup()
   font_large = &lv_font_montserrat_30; 
   font_normal = &lv_font_montserrat_24; 
   tab_h = 80;
-  lv_theme_default_init(NULL, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), LV_THEME_DEFAULT_DARK, font_normal);
+  //#define LV_THEME_DEFAULT_DARK 1
+  lv_theme_default_init(NULL, lv_palette_main(LV_PALETTE_GREEN), lv_palette_main(LV_PALETTE_GREEN), LV_THEME_DEFAULT_DARK, font_normal);
   tv = lv_tabview_create(lv_scr_act(), LV_DIR_TOP, tab_h);
-  //lv_obj_set_style_text_font(lv_scr_act(), font_large, 0);
   lv_obj_t * t1 = lv_tabview_add_tab(tv, "AuroraAlert");
   lv_obj_set_style_text_font(tv, font_large, 0);
-
-  label = lv_label_create(t1);
-  char buf[64];
-  snprintf(buf, 64, "Please configure wifi \n using the AuroraAlert hotspot...");
-  lv_label_set_text(label, buf);
-  lv_obj_set_style_text_font(label, font_normal, 0);
   lv_obj_set_style_text_color(tv, lv_color_hex(0x00ff00), LV_PART_MAIN);
-  lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
+
+  Kp_label = lv_label_create(t1);
+  //char buf[64];
+  snprintf(buf, 64, "Please configure wifi \n using the AuroraAlert hotspot");
+  lv_label_set_text(Kp_label, buf);
+  lv_obj_set_style_text_font(Kp_label, font_normal, 0);
+  lv_obj_align(Kp_label, LV_ALIGN_CENTER, 0, -100);
   
+  Index_label = lv_label_create(t1);
+  //char buf[64];
+  snprintf(buf, 64, "...");
+  lv_label_set_text(Index_label, buf);
+  lv_obj_set_style_text_font(Index_label, font_normal, 0);
+  //lv_obj_set_style_text_color(tv, lv_color_hex(0x00ff00), LV_PART_MAIN);
+  lv_obj_align(Index_label, LV_ALIGN_CENTER, 0, 0);
+
   Serial.println("Update screen");
   lv_timer_handler(); /* let the GUI do its work */
   
   Serial.println("Starting Wifi");
   WiFi.mode(WIFI_STA);
   wm.setConfigPortalTimeout(300);
+  wm.setConnectTimeout(120);
+  wm.setAPClientCheck(true);
   bool res = wm.autoConnect("AuroraAlert");
   
   Serial.println("Checking for updates");
-  snprintf(buf, 64, "Wifi started, checking for updates...");
-  lv_label_set_text(label, buf);
+  snprintf(buf, 64, "Wifi started, checking for updates");
+  lv_label_set_text(Kp_label, buf);
   lv_timer_handler(); /* let the GUI do its work */
-  ESP32OTAPull ota;
   Serial.printf("We are running version %s of the sketch, Board='%s', Device='%s'.\n", VERSION, ARDUINO_BOARD, WiFi.macAddress().c_str());
   int ret = ota.CheckForOTAUpdate(RELEASE_URL, VERSION);
   Serial.printf("CheckForOTAUpdate returned %d (%s)\n\n", ret, errtext(ret));
+  if(!res) {
+        Serial.println("Failed to connect");
+        ESP.restart();
+    } 
 
-
+  Serial.println("Start timers");
   startMillis = millis() - period;  //initial start time, triggers initial update in the loop
+  timeClient.begin();
+
   Serial.println("Setup done");
 }
 
 
 void label_refresher_task()
 {
+    Serial.println(timeClient.getFormattedTime());
+    Serial.println(timeClient.getEpochTime());
     getKp();
     getIndex();
 
-    if(lv_obj_get_screen(label) == lv_scr_act()) {
-            char buf[64];
-            snprintf(buf, 64, "Highest expected 3-day Kp: %.1f \n\n Expected 1h energy index: %d", Kp_val, Index);
-            lv_label_set_text(label, buf);
-    }
-    
+    //char buf[64];
+    snprintf(buf, 64, "Highest expected 3-day Kp: %.1f", Kp_val);
+    lv_label_set_text(Kp_label, buf);
+    snprintf(buf, 64, "30-60 minute energy index: %d", Index);
+    lv_label_set_text(Index_label, buf);
+    if (Index >= 50){
+        lv_obj_set_style_text_color(Index_label, lv_color_hex(0xff0000), LV_PART_MAIN);
+    } else if (Index >= 40 && Index < 50){
+        lv_obj_set_style_text_color(Index_label, lv_color_hex(0xffa5000), LV_PART_MAIN);
+    } else {
+        lv_obj_set_style_text_color(Index_label, lv_color_hex(0x00ff00), LV_PART_MAIN);
+    }    
 }
+
 
 void loop()
 {
-  lv_timer_handler(); /* let the GUI do its work */
-  currentMillis = millis();  //get the current "time" (actually the number of milliseconds since the program started)
+  lv_timer_handler(); /* update screen GUI */
+  timeClient.update(); /* update time */
+  currentMillis = millis();  // store the current "time" (actually the number of milliseconds since the program started)
   if (currentMillis - startMillis >= period)  //test whether the period has elapsed
   {
     label_refresher_task();
-    startMillis = currentMillis;  //IMPORTANT to save the start time of the current LED state.
+    startMillis = currentMillis;
   }
 }
+
 
 const char *errtext(int code)
 {

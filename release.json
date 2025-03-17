@@ -9,6 +9,11 @@
       "Board": "ESP32S3_DEV",
       "Version": "0.2",
       "URL": "https://github.com/hugomeiland/aurora-kp-display/releases/download/v0.2/auroraalert.v0.2.bin"
+    },
+    {
+      "Board": "ESP32S3_DEV",
+      "Version": "0.3",
+      "URL": "https://github.com/hugomeiland/aurora-kp-display/releases/download/v0.3/auroraalert.v0.3.bin"
     }
   ]
 }
