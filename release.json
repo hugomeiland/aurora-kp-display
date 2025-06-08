@@ -21,7 +21,6 @@
       "URL": "https://github.com/hugomeiland/aurora-kp-display/releases/download/v0.3/auroraalert.v0.3.bin"
     },
     {
-      "Board": "*",
       "Version": "0.4",
       "URL": "https://github.com/hugomeiland/aurora-kp-display/releases/download/v0.4/firmware-0.4.bin"
     }
