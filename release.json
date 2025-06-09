@@ -29,6 +29,11 @@
       "Board": "ESP32S3_DEV",
       "Version": "0.4",
       "URL": "https://github.com/hugomeiland/aurora-kp-display/releases/download/v0.4/firmware-0.4.bin"
+    },
+    {
+      "Board": "Espressif ESP32-S3-DevKitC-1-N16R8V (16 MB QD, 8MB PSRAM)",
+      "Version": "0.5",
+      "URL": "https://github.com/hugomeiland/aurora-kp-display/releases/download/v0.5/firmware-0.5.bin"
     }
   ]
 }
