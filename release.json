@@ -1,36 +1,6 @@
 {
   "Configurations": [
     {
-      "Board": "ESP32S3_DEV",
-      "Version": "0.1",
-      "URL": "https://github.com/hugomeiland/aurora-kp-display/releases/download/v0.1/auroraalert.v0.1.bin"
-    },
-    {
-      "Board": "ESP32S3_DEV",
-      "Version": "0.2",
-      "URL": "https://github.com/hugomeiland/aurora-kp-display/releases/download/v0.2/auroraalert.v0.2.bin"
-    },
-    {
-      "Board": "ESP32S3_DEV",
-      "Version": "0.3",
-      "URL": "https://github.com/hugomeiland/aurora-kp-display/releases/download/v0.3/auroraalert.v0.3.bin"
-    },
-    {
-      "Board": "Espressif ESP32-S3-DevKitC-1-N16R8V (16 MB QD, 8MB PSRAM)",
-      "Version": "0.3",
-      "URL": "https://github.com/hugomeiland/aurora-kp-display/releases/download/v0.3/auroraalert.v0.3.bin"
-    },
-    {
-      "Board": "Espressif ESP32-S3-DevKitC-1-N16R8V (16 MB QD, 8MB PSRAM)",
-      "Version": "0.5",
-      "URL": "https://github.com/hugomeiland/aurora-kp-display/releases/download/v0.5/firmware-0.5.bin"
-    },
-    {
-      "Board": "ESP32S3_DEV",
-      "Version": "0.5",
-      "URL": "https://github.com/hugomeiland/aurora-kp-display/releases/download/v0.5/firmware-0.5.bin"
-    },
-    {
       "Board": "Espressif ESP32-S3-DevKitC-1-N16R8V (16 MB QD, 8MB PSRAM)",
       "Version": "0.6",
       "URL": "https://github.com/hugomeiland/aurora-kp-display/releases/download/v0.6/firmware-0.6.bin"
